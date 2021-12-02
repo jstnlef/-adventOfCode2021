@@ -1,3 +1,4 @@
+use "collections"
 use "debug"
 use "files"
 use "../common"
@@ -43,4 +44,18 @@ actor Main
     count
 
   fun part2_sliding_delta(depths: Array[USize]): USize =>
-    0
+    var count: USize = 0
+    try
+      var last: USize = 1000000
+      for i in Range(0, depths.size()) do
+        let x = depths(i)?
+        let y = depths(i+1)?
+        let z = depths(i+2)?
+        let sum = x + y + z
+        if sum > last then
+          count = count + 1
+        end
+        last = sum
+      end
+    end
+    count
