@@ -76,11 +76,11 @@ class Sub
     depth * position
 
 
-class Command
+class val Command
   let direction: Direction
   let units: U32
 
-  new create(line: String iso) =>
+  new val create(line: String iso) =>
     let split = (consume line).split(" ")
     let dir_s = try split(0)? else "forward" end
     let units_s = try split(1)? else "0" end
