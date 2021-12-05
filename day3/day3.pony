@@ -1,8 +1,6 @@
 use "collections"
 use "itertools"
-use "debug"
 use "files"
-use "../common"
 
 actor Main
   new create(env: Env) =>
@@ -34,30 +32,6 @@ actor Main
       end
     end
     Diagnostic(bit_length, lines)
-
-
-primitive BitUtils
-  fun tag extract_bit(reading: USize, bit: USize): USize => (reading >> (bit - 1)) and 1
-
-  fun tag most_common(readings: Array[USize], bit: USize): USize =>
-    var count: ISize = 0
-    for v in readings.values() do
-      let extracted = BitUtils.extract_bit(v, bit)
-      if extracted == 1 then
-        count = count + 1
-      else
-        count = count - 1
-      end
-    end
-
-    if count < 0 then
-      0
-    else
-      1
-    end
-
-  fun tag least_common(readings: Array[USize], bit: USize): USize =>
-    if BitUtils.most_common(readings, bit) == 1 then 0 else 1 end
 
 
 class Diagnostic
@@ -106,19 +80,32 @@ class Diagnostic
 
   fun tag _gamma_rate(bit_length': USize, readings': Array[USize]): USize =>
     var rate: USize = 0
-    var num_ones: USize = 0
     for i in Range(0, bit_length') do
-      for v in readings'.values() do
-        let extracted = (v >> i) and 1
-        num_ones = num_ones + extracted
-      end
-
-      if num_ones > (readings'.size() / 2) then
+      let most_common = BitUtils.most_common(readings', i + 1)
+      if most_common == 1 then
         rate = rate + (1 << i)
       end
-      num_ones = 0
     end
     rate
 
   fun tag _epsilon_rate(bit_length': USize, gamma_rate': USize): USize =>
     (1 << bit_length') - gamma_rate' - 1
+
+
+primitive BitUtils
+  fun extract_bit(reading: USize, bit: USize): USize => (reading >> (bit - 1)) and 1
+
+  fun most_common(readings: Array[USize], bit: USize): USize =>
+    var count: ISize = 0
+    for v in readings.values() do
+      if BitUtils.extract_bit(v, bit) == 1 then
+        count = count + 1
+      else
+        count = count - 1
+      end
+    end
+
+    if count < 0 then 0 else 1 end
+
+  fun least_common(readings: Array[USize], bit: USize): USize =>
+    if BitUtils.most_common(readings, bit) == 1 then 0 else 1 end
