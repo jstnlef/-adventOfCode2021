@@ -74,7 +74,7 @@ class Diagnostic
     let common = find_common(readings', bit)
     let filtered = Iter[USize](readings'.values())
       .filter({(reading) => BitUtils.extract_bit(reading, bit) == common})
-      .collect(Array[USize](readings'.size()))
+      .collect(Array[USize])
 
     _find_rating(filtered, bit - 1, find_common)
 
