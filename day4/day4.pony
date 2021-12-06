@@ -33,24 +33,26 @@ actor Main is ResultReceiver
     end
 
     let numbers_to_draw: Array[USize] val = [7;4;9;5;11;17;23;2;0;14;21;24;10;16;13;6;15;25;12;22;18;20;8;19;3;26;1]
-    var test_boards: Array[Array[USize] val] val = [[
-      14;21;17;24;4;10;16;15;9;19;18;8;23;26;20;22;11;13;6;5;2;0;12;3;7
-    ]]
+    var test_boards: Array[Array[USize] val] val = [
+      [22;13;17;11;0;8;2;23;4;24;21;9;14;16;7;6;10;3;18;5;1;12;20;15;19]
+      [3;15;0;2;22;9;18;13;17;5;19;8;7;25;23;20;11;10;24;4;14;21;16;12;6]
+      [14;21;17;24;4;10;16;15;9;19;18;8;23;26;20;22;11;13;6;5;2;0;12;3;7]
+    ]
     BingoSim(this, numbers_to_draw, test_boards)
 
 
 actor BingoSim is ResultReceiver
-  let _caller: ResultReceiver
+  let caller: ResultReceiver
   let numbers_to_draw: Array[USize] val
   let boards: Array[Board] val
   let results: Array[SimulationResult]
 
   new create(
-    caller: ResultReceiver,
+    caller': ResultReceiver,
     numbers_to_draw': Array[USize] val,
     boards': Array[Array[USize] val] val
   ) =>
-    _caller = caller
+    caller = caller'
     numbers_to_draw = numbers_to_draw'
 
     var b: Array[Board] iso = recover Array[Board] end
@@ -73,7 +75,7 @@ actor BingoSim is ResultReceiver
       return
     end
 
-    var min_to_win: USize = 999999
+    var min_to_win: USize = USize.max_value()
     var min_result = SimulationResult(0, 0)
     for r in results.values() do
       if r.numbers_to_win < min_to_win then
@@ -82,21 +84,21 @@ actor BingoSim is ResultReceiver
       end
     end
 
-    _caller.receive_result(min_result)
+    caller.receive_result(min_result)
 
 
 actor Board
   let board_width: USize = 5
   let numbers_to_draw: Array[USize] val
-  let _caller: ResultReceiver
+  let caller: ResultReceiver
   let _inner: Array[BingoPosition]
 
-  var _total_drawn: USize = 0
-  var _last_number_drawn: USize = 0
+  var total_drawn: USize = 0
+  var last_number_drawn: USize = 0
 
-  new create(caller: ResultReceiver, numbers_to_draw': Array[USize] val, board: Array[USize] val) =>
+  new create(caller': ResultReceiver, numbers_to_draw': Array[USize] val, board: Array[USize] val) =>
     numbers_to_draw = numbers_to_draw'
-    _caller = caller
+    caller = caller'
     _inner = Array[BingoPosition]
     for number in board.values() do
       _inner.push(BingoPosition(number))
@@ -104,19 +106,14 @@ actor Board
 
   be simulate_until_win() =>
     for number in numbers_to_draw.values() do
-      _total_drawn = _total_drawn + 1
-      _last_number_drawn = number
+      total_drawn = total_drawn + 1
+      last_number_drawn = number
       mark_position(number)
       if has_won() then
         break
       end
     end
-
-    // for pos in _inner.values() do
-    //   Debug.out(pos.string())
-    // end
-
-    _caller.receive_result(calculate_sim_result())
+    caller.receive_result(calculate_sim_result())
 
   fun ref mark_position(number: USize) =>
     for pos in _inner.values() do
@@ -139,7 +136,7 @@ actor Board
 
   fun check_columns(): Bool =>
     for i in Range(0, board_width) do
-      if check_win(i, board_width * (board_width - 1), board_width) then
+      if check_win(i, board_width * board_width, board_width) then
         return true
       end
     end
@@ -167,8 +164,8 @@ actor Board
         unmarked_sum = unmarked_sum + pos.number
       end
     end
-    let score = unmarked_sum * _last_number_drawn
-    SimulationResult(score, _total_drawn)
+    let score = unmarked_sum * last_number_drawn
+    SimulationResult(score, total_drawn)
 
 
 class BingoPosition
