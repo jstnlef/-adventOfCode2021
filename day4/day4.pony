@@ -22,23 +22,38 @@ actor Main is ResultReceiver
     _env.out.print(result.string())
 
   fun parse_input(auth: AmbientAuth): BingoSim =>
-    let lines = Array[String](1000)
-    var bit_length: USize = 0
+    let numbers_to_draw: Array[USize] iso = recover iso Array[USize] end
+    let boards: Array[Array[USize] val] iso = recover iso Array[Array[USize] val](1000) end
+    var buffer: String ref = String.create()
+    var line_number: USize = 0
+
     let path = FilePath(auth, "input.txt")
     with file = File(path) do
       for line in file.lines() do
-        bit_length = line.size()
-        lines.push((consume line))
+        if line_number == 0 then
+          let split = line.split(",")
+          for s in (consume split).values() do
+            numbers_to_draw.push(s.usize()?)
+          end
+        elseif line_number > 1 then
+          if line == "" then
+            let split = buffer.split(" ")
+            let board = recover iso Array[USize] end
+            for s in (consume split).values() do
+              try
+                board.push(s.usize()?)
+              end
+            end
+            boards.push(consume board)
+            buffer = String.create()
+          else
+            buffer = buffer + consume line + " "
+          end
+        end
+        line_number = line_number + 1
       end
     end
-
-    let numbers_to_draw: Array[USize] val = [7;4;9;5;11;17;23;2;0;14;21;24;10;16;13;6;15;25;12;22;18;20;8;19;3;26;1]
-    var test_boards: Array[Array[USize] val] val = [
-      [22;13;17;11;0;8;2;23;4;24;21;9;14;16;7;6;10;3;18;5;1;12;20;15;19]
-      [3;15;0;2;22;9;18;13;17;5;19;8;7;25;23;20;11;10;24;4;14;21;16;12;6]
-      [14;21;17;24;4;10;16;15;9;19;18;8;23;26;20;22;11;13;6;5;2;0;12;3;7]
-    ]
-    BingoSim(this, numbers_to_draw, test_boards)
+    BingoSim(this, consume numbers_to_draw, consume boards)
 
 
 actor BingoSim is ResultReceiver
@@ -55,13 +70,15 @@ actor BingoSim is ResultReceiver
     caller = caller'
     numbers_to_draw = numbers_to_draw'
 
+    Debug.out("Numbers to draw: " + ",".join(numbers_to_draw.values()))
+
     var b: Array[Board] iso = recover Array[Board] end
     for board in boards'.values() do
+      Debug.out("Boards: " + " ".join(board.values()))
       b.push(Board(this, numbers_to_draw, board))
     end
 
     boards = consume b
-
     results = Array[SimulationResult]
 
   be simulate_until_win() =>
@@ -127,7 +144,8 @@ actor Board
     check_rows() or check_columns()
 
   fun check_rows(): Bool =>
-    for i in Range(0, board_width * (board_width - 1), 5) do
+    Debug.out("Checking Rows!")
+    for i in Range(0, (board_width * (board_width - 1)) + 1, 5) do
       if check_win(i, i + 5, 1) then
         return true
       end
@@ -135,6 +153,7 @@ actor Board
     false
 
   fun check_columns(): Bool =>
+    Debug.out("Checking Columns!")
     for i in Range(0, board_width) do
       if check_win(i, board_width * board_width, board_width) then
         return true
@@ -144,8 +163,10 @@ actor Board
 
   fun check_win(from: USize, to: USize, step: USize): Bool =>
     try
+      Debug.out("From: " + from.string() + " To: " + to.string() + " Step: " + step.string())
       for i in Range(from, to, step) do
         let pos = _inner(i)?
+        Debug.out(i.string() + " " + pos.string())
         if pos.marked == false then
           return false
         end
