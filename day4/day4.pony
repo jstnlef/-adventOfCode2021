@@ -3,7 +3,7 @@ use "debug"
 use "itertools"
 use "files"
 
-actor Main is ResultReceiver
+actor Main is SimResultReceiver
   let _env: Env
   new create(env: Env) =>
     _env = env
@@ -18,8 +18,8 @@ actor Main is ResultReceiver
     let sim = parse_input(auth)
     sim.simulate_until_win()
 
-  be receive_result(result: SimulationResult) =>
-    _env.out.print(result.string())
+  be receive_sim_results(results: SimResults) =>
+    _env.out.print(results.string())
 
   fun parse_input(auth: AmbientAuth): BingoSim =>
     let numbers_to_draw: Array[USize] iso = recover iso Array[USize] end
@@ -57,13 +57,13 @@ actor Main is ResultReceiver
 
 
 actor BingoSim is ResultReceiver
-  let caller: ResultReceiver
+  let caller: SimResultReceiver
   let numbers_to_draw: Array[USize] val
   let boards: Array[Board] val
   let results: Array[SimulationResult]
 
   new create(
-    caller': ResultReceiver,
+    caller': SimResultReceiver,
     numbers_to_draw': Array[USize] val,
     boards': Array[Array[USize] val] val
   ) =>
@@ -101,7 +101,16 @@ actor BingoSim is ResultReceiver
       end
     end
 
-    caller.receive_result(min_result)
+    var max_to_win: USize = USize.min_value()
+    var max_result = SimulationResult(0, 0)
+    for r in results.values() do
+      if r.numbers_to_win > max_to_win then
+        max_to_win = r.numbers_to_win
+        max_result = r
+      end
+    end
+
+    caller.receive_sim_results(SimResults(min_result, max_result))
 
 
 actor Board
@@ -189,7 +198,7 @@ actor Board
     SimulationResult(score, total_drawn)
 
 
-class BingoPosition
+class BingoPosition is Stringable
   let number: USize
   var marked: Bool
 
@@ -215,3 +224,19 @@ class val SimulationResult is Stringable
 
 trait tag ResultReceiver
   be receive_result(result: SimulationResult)
+
+
+trait tag SimResultReceiver
+  be receive_sim_results(results: SimResults)
+
+
+class val SimResults is Stringable
+  let best_board: SimulationResult
+  let worst_board: SimulationResult
+
+  new val create(best: SimulationResult, worst: SimulationResult) =>
+    best_board = best
+    worst_board = worst
+
+  fun string(): String iso^ =>
+    "Best board:\n" + best_board.string() + "\n\n" + "Worst board:\n" + worst_board.string()
