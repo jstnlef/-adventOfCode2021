@@ -16,8 +16,11 @@ actor Main
     end
 
     let floor = parse_input(auth)
-    let count = floor.count_dangerous_areas()
-    env.out.print("Number of dangerous areas: " + count.string())
+    var count = floor.count_dangerous_areas(false)
+    env.out.print("Number of dangerous areas no diagonals: " + count.string())
+
+    count = floor.count_dangerous_areas(true)
+    env.out.print("Number of dangerous areas with diagonals: " + count.string())
 
 
   fun parse_input(auth: AmbientAuth): OceanFloor =>
@@ -37,7 +40,7 @@ actor Main
 
 
 class OceanFloor
-  let floor: Map[Pos, USize]
+  var floor: Map[Pos, USize]
   let lines: Array[VentLine]
   var max_x: USize = 0
   var max_y: USize = 0
@@ -57,8 +60,10 @@ class OceanFloor
     Debug.out("max x: " + max_x.string() + " " + "max y: " + max_y.string())
     floor = Map[Pos, USize]
 
-  fun ref count_dangerous_areas(): USize =>
-    _map_vents()
+  fun ref count_dangerous_areas(diag: Bool): USize =>
+    floor = Map[Pos, USize]
+    _map_vents(diag)
+    // Debug.out("Mapped:\n" + string())
 
     var count: USize = 0
     for pos in floor.values() do
@@ -68,13 +73,13 @@ class OceanFloor
     end
     count
 
-  fun ref _map_vents() =>
+  fun ref _map_vents(diag: Bool) =>
     for line in lines.values() do
-      _map_vent(line)
+      _map_vent(line, diag)
     end
 
-  fun ref _map_vent(line: VentLine) =>
-    for pos in line.positions().values() do
+  fun ref _map_vent(line: VentLine, diag: Bool) =>
+    for pos in line.positions(diag).values() do
       let updated = try
         floor(pos)? + 1
       else
@@ -107,8 +112,9 @@ class val VentLine
     from = from'
     to = to'
 
-  fun positions(): Array[Pos] =>
+  fun positions(diag: Bool): Array[Pos] =>
     var positions' = Array[Pos]
+
     if is_vertical() then
       for i in Range(min_y(), max_y() + 1) do
         positions'.push(Pos(from.x, i))
@@ -117,9 +123,35 @@ class val VentLine
       for i in Range(min_x(), max_x() + 1) do
         positions'.push(Pos(i, from.y))
       end
+    else
+      if diag then
+        positions'.push(from)
+        var start = from
+        for i in Range(min_x(), max_x()) do
+          let new_pos = match direction()
+          | NE => Pos(start.x + 1, start.y - 1)
+          | NW => Pos(start.x - 1, start.y - 1)
+          | SE => Pos(start.x + 1, start.y + 1)
+          | SW => Pos(start.x - 1, start.y + 1)
+          end
+          positions'.push(new_pos)
+          start = new_pos
+        end
+      end
     end
 
     positions'
+
+  fun direction(): Direction =>
+    if (from.x < to.x) and (from.y > to.y) then
+      NE
+    elseif (from.x > to.x) and (from.y > to.y) then
+      NW
+    elseif (from.x < to.x) and (from.y < to.y) then
+      SE
+    else
+      SW
+    end
 
   fun is_vertical(): Bool =>
     from.x == to.x
@@ -168,3 +200,9 @@ class val Pos
   fun ne(other: Pos): Bool =>
     not eq(other)
 
+
+primitive NW
+primitive NE
+primitive SW
+primitive SE
+type Direction is (NW | NE | SW | SE)
