@@ -16,39 +16,40 @@ actor Main
     end
 
     let initial = parse_input(auth)
-    Debug.out("Initial State: " + ",".join(initial.values()))
 
     var end_state = run_lantern_fish_sim(initial, 80)
-    env.out.print("Number of fish after 80: " + end_state.size().string())
+    env.out.print("Number of fish after 80: " +
+      Iter[USize](end_state.values()).fold[USize](0, {(sum, x) => sum + x }).string())
 
     end_state = run_lantern_fish_sim(initial, 256)
-    env.out.print("Number of fish after 256: " + end_state.size().string())
+    env.out.print("Number of fish after 256: " +
+      Iter[USize](end_state.values()).fold[USize](0, {(sum, x) => sum + x }).string())
 
   fun run_lantern_fish_sim(initial: Array[USize], days: USize): Array[USize] =>
-    let state = initial.clone()
-    for day in Range(0, days) do
-      for i in Range(0, state.size()) do
-        try
-          let fish = state(i)?
-          if fish == 0 then
-            state.push(8)
-            try
-              state.update(i, 6)?
-            else
-              Debug.out("Unable to update fish!")
-            end
-          else
-            try
-              state.update(i, fish - 1)?
-            else
-              Debug.out("Unable to update fish!")
-            end
-          end
-        end
+    var counts_by_day: Array[USize] = [0;0;0;0;0;0;0;0;0]
+    try
+      for fish in initial.values() do
+        counts_by_day.update(fish, counts_by_day(fish)? + 1)?
       end
-      Debug.out("After " + day.string() + " days: " + ",".join(state.values()))
+
+      for day in Range(0, days) do
+        var new_counts: Array[USize] = [0;0;0;0;0;0;0;0;0]
+        Debug.out("Counts: " + ",".join(counts_by_day.values()))
+        new_counts.update(7, counts_by_day(8)?)?
+        new_counts.update(6, counts_by_day(7)? + counts_by_day(0)?)?
+        new_counts.update(5, counts_by_day(6)?)?
+        new_counts.update(4, counts_by_day(5)?)?
+        new_counts.update(3, counts_by_day(4)?)?
+        new_counts.update(2, counts_by_day(3)?)?
+        new_counts.update(1, counts_by_day(2)?)?
+        new_counts.update(0, counts_by_day(1)?)?
+        new_counts.update(8, counts_by_day(0)?)?
+        counts_by_day = new_counts
+      end
+    else
+      Debug.out("Error processing!!")
     end
-    state
+    counts_by_day
 
   fun parse_input(auth: AmbientAuth): Array[USize] =>
     let initial = Array[USize]
