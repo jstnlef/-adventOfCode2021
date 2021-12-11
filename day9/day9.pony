@@ -64,39 +64,15 @@ class HeightMap
       let p = try points_to_fill.shift()? else break end
       seen.set(p)
 
-      try
-        let new_point = up(p)?
-        if (new_point.height != 9) and
-           (not seen.contains(new_point)) and
-           (not points_to_fill.contains(new_point)) then
-          points_to_fill.push(new_point)
-        end
-      end
-
-      try
-        let new_point = down(p)?
-        if (new_point.height != 9) and
-           (not seen.contains(new_point)) and
-           (not points_to_fill.contains(new_point)) then
-          points_to_fill.push(new_point)
-        end
-      end
-
-      try
-        let new_point = right(p)?
-        if (new_point.height != 9) and
-           (not seen.contains(new_point)) and
-           (not points_to_fill.contains(new_point)) then
-          points_to_fill.push(new_point)
-        end
-      end
-
-      try
-        let new_point = left(p)?
-        if (new_point.height != 9) and
-           (not seen.contains(new_point)) and
-           (not points_to_fill.contains(new_point)) then
-          points_to_fill.push(new_point)
+      var new_points = [try up(p)? end; try down(p)? end; try left(p)? end; try right(p)? end]
+      for new_point in new_points.values() do
+        match new_point
+        | let new_p: Point =>
+          if (new_p.height != 9) and
+            (not seen.contains(new_p)) and
+            (not points_to_fill.contains(new_p)) then
+            points_to_fill.push(new_p)
+          end
         end
       end
     end
