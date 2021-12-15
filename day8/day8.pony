@@ -19,6 +19,9 @@ actor Main
   let unique_count = count_unique_digits(patterns)
   env.out.print("Unique digits: " + unique_count.string())
 
+  let sum_of_deduced = sum_up_deduced_digits(patterns)
+  env.out.print("Sum of deduced: " + sum_of_deduced.string())
+
   fun count_unique_digits(patterns: Array[Pattern]): USize =>
     var count: USize = 0
     for pattern in patterns.values() do
@@ -26,9 +29,16 @@ actor Main
     end
     count
 
+  fun sum_up_deduced_digits(patterns: Array[Pattern]): USize =>
+    var count: USize = 0
+    for pattern in patterns.values() do
+      count = count + pattern.deduce_output_digits()
+    end
+    count
+
   fun parse_input(auth: AmbientAuth): Array[Pattern] =>
     let patterns = Array[Pattern]
-    let path = FilePath(auth, "input.txt")
+    let path = FilePath(auth, "example_input.txt")
     with file = File(path) do
       for line in file.lines() do
         let split = (consume line).split_by(" | ")
@@ -58,6 +68,9 @@ class Pattern
     end
 
     count
+
+  fun deduce_output_digits(): USize =>
+    0
 
   fun _is_unique(digit: String): Bool =>
     match digit.size()
