@@ -7,15 +7,7 @@ actor Main is SimResultReceiver
   let _env: Env
   new create(env: Env) =>
     _env = env
-
-    let auth = try
-      env.root as AmbientAuth
-    else
-      env.err.print("env.root must be AmbientAuth")
-      return
-    end
-
-    let sim = parse_input(auth)
+    let sim = parse_input(env.root)
     sim.simulate_until_win()
 
   be receive_sim_results(results: SimResults) =>

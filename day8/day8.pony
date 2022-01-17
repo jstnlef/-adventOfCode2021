@@ -8,19 +8,12 @@ actor Main
   new create(env': Env) =>
     env = env'
 
-    let auth = try
-      env.root as AmbientAuth
-    else
-      env.err.print("env.root must be AmbientAuth")
-      return
-    end
+    let patterns = parse_input(env.root)
+    let unique_count = count_unique_digits(patterns)
+    env.out.print("Unique digits: " + unique_count.string())
 
-  let patterns = parse_input(auth)
-  let unique_count = count_unique_digits(patterns)
-  env.out.print("Unique digits: " + unique_count.string())
-
-  let sum_of_deduced = sum_up_deduced_digits(patterns)
-  env.out.print("Sum of deduced: " + sum_of_deduced.string())
+    let sum_of_deduced = sum_up_deduced_digits(patterns)
+    env.out.print("Sum of deduced: " + sum_of_deduced.string())
 
   fun count_unique_digits(patterns: Array[Pattern]): USize =>
     var count: USize = 0

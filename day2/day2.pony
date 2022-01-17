@@ -1,18 +1,10 @@
 use "collections"
 use "debug"
 use "files"
-use "../common"
 
 actor Main
   new create(env: Env) =>
-    let auth = try
-      env.root as AmbientAuth
-    else
-      env.err.print("env.root must be AmbientAuth")
-      return
-    end
-
-    let commands = parse_input(auth)
+    let commands = parse_input(env.root)
 
     let part1_sub = part1_simulation(commands)
     env.out.print("Part1: " + part1_sub.solution().string())

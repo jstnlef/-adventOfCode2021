@@ -8,14 +8,7 @@ actor Main
   new create(env': Env) =>
     env = env'
 
-    let auth = try
-      env.root as AmbientAuth
-    else
-      env.err.print("env.root must be AmbientAuth")
-      return
-    end
-
-    let initial = parse_input(auth)
+    let initial = parse_input(env.root)
 
     var end_state = run_lantern_fish_sim(initial, 80)
     env.out.print("Number of fish after 80: " +

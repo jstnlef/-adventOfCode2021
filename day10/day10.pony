@@ -8,14 +8,7 @@ actor Main
   new create(env': Env) =>
     env = env'
 
-    let auth = try
-      env.root as AmbientAuth
-    else
-      env.err.print("env.root must be AmbientAuth")
-      return
-    end
-
-    let lines = parse_input(auth)
+    let lines = parse_input(env.root)
 
     var score = check_syntax_score(lines)
     env.out.print("Syntax score: " + score.string())

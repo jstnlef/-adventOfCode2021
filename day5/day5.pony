@@ -8,14 +8,7 @@ actor Main
   new create(env': Env) =>
     env = env'
 
-    let auth = try
-      env.root as AmbientAuth
-    else
-      env.err.print("env.root must be AmbientAuth")
-      return
-    end
-
-    let floor = parse_input(auth)
+    let floor = parse_input(env.root)
     var count = floor.count_dangerous_areas(false)
     env.out.print("Number of dangerous areas no diagonals: " + count.string())
 

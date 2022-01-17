@@ -8,14 +8,7 @@ actor Main
   new create(env': Env) =>
     env = env'
 
-    let auth = try
-      env.root as AmbientAuth
-    else
-      env.err.print("env.root must be AmbientAuth")
-      return
-    end
-
-    let positions = parse_input(auth)
+    let positions = parse_input(env.root)
 
     var min = USize.max_value()
     var max: USize = 0

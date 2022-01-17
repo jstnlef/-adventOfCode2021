@@ -1,18 +1,10 @@
 use "collections"
 use "debug"
 use "files"
-use "../common"
 
 actor Main
   new create(env: Env) =>
-    let auth = try
-      env.root as AmbientAuth
-    else
-      env.err.print("env.root must be AmbientAuth")
-      return
-    end
-
-    let depths = parse_input(auth)
+    let depths = parse_input(env.root)
 
     let single_deltas = part1_single_delta(depths)
     env.out.print("Part 1 Depth increased: " + single_deltas.string())

@@ -8,14 +8,7 @@ actor Main
   new create(env': Env) =>
     env = env'
 
-    let auth = try
-      env.root as AmbientAuth
-    else
-      env.err.print("env.root must be AmbientAuth")
-      return
-    end
-
-    let map = parse_input(auth)
+    let map = parse_input(env.root)
     env.out.print("Lowest Point Risk: " + map.calculate_lowest_point_risk().string())
     env.out.print("Basin Risk: " + map.calculate_basin_risk().string())
 

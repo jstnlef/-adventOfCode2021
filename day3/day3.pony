@@ -4,14 +4,7 @@ use "files"
 
 actor Main
   new create(env: Env) =>
-    let auth = try
-      env.root as AmbientAuth
-    else
-      env.err.print("env.root must be AmbientAuth")
-      return
-    end
-
-    let diagnostic = parse_input(auth)
+    let diagnostic = parse_input(env.root)
     env.out.print("Bit length: " + diagnostic.bit_length.string())
     env.out.print("Gamma rate: " + diagnostic.gamma_rate.string())
     env.out.print("Epsilon rate: " + diagnostic.epsilon_rate.string())
